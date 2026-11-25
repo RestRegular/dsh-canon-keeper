@@ -1,0 +1,35 @@
+{
+  "id": "D-001",
+  "kind": "decision",
+  "title": "标记带版本、rev 只管语义",
+  "statement": "标记自带版本号，钉的是口径的语义版本 rev；rev 只在语义改动时 +1，措辞修订不涨版本。",
+  "aliases": [
+    "标记自带版本",
+    "rev 只在语义改动时"
+  ],
+  "deprecatedPhrases": [],
+  "tags": [
+    "核心机制"
+  ],
+  "rev": 1,
+  "supersededBy": null,
+  "createdAt": 1795565010701,
+  "updatedAt": 1795565010701,
+  "history": [
+    {
+      "seq": 1,
+      "rev": 1,
+      "change": "semantic",
+      "at": 1795565010701,
+      "actor": {
+        "kind": "unknown"
+      },
+      "note": "初始登记",
+      "statement": "标记自带版本号，钉的是口径的语义版本 rev；rev 只在语义改动时 +1，措辞修订不涨版本。",
+      "aliases": [
+        "标记自带版本",
+        "rev 只在语义改动时"
+      ]
+    }
+  ]
+}

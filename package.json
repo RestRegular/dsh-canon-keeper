@@ -1,0 +1,82 @@
+{
+  "name": "@restregular/dsh-canon-keeper",
+  "version": "0.1.0",
+  "description": "Canon Keeper — register the key facts of a project (decisions, rules, values, terms) as numbered canon entries with semantic versions, pin them into documents as versioned markers, and mechanically list every place that goes stale when a fact changes. · 口径守护：把项目关键事实登记成带语义版本的编号条目，用带版本的标记钉进文档，口径一改就能机械列出所有失效位置并逐处核验。",
+  "icon": "./icon.svg",
+  "type": "module",
+  "main": "index.js",
+  "bin": {
+    "dsh-canon-keeper": "./bin/canon-keeper.mjs"
+  },
+  "exports": {
+    ".": "./index.js",
+    "./icon": "./icon.svg",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "lib/*.js",
+    "bin/*.mjs",
+    "cordis.patch.yml",
+    "icon.svg",
+    "docs/design.md",
+    "docs/DETAIL.md",
+    "README.md",
+    "LICENSE",
+    ".gitattributes"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "*",
+    "@deepseek-ai/dsh-tools": "*",
+    "@deepseek-ai/dsh-llm": "*"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/cordis": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-tools": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-llm": {
+      "optional": true
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RestRegular/dsh-canon-keeper.git"
+  },
+  "homepage": "https://github.com/RestRegular/dsh-canon-keeper#readme",
+  "bugs": {
+    "url": "https://github.com/RestRegular/dsh-canon-keeper/issues"
+  },
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "canon",
+    "documentation",
+    "consistency",
+    "worldbuilding",
+    "adr"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "test": "node test/smoke.mjs && node --import ./test/register-stub.mjs test/host.mjs",
+    "test:lib": "node test/smoke.mjs",
+    "test:host": "node --import ./test/register-stub.mjs test/host.mjs",
+    "check": "node bin/canon-keeper.mjs check"
+  },
+  "license": "MIT",
+  "author": "RestRegular"
+}

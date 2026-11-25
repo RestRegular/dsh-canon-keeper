@@ -1,0 +1,14 @@
+node_modules/
+*.log
+.DS_Store
+Thumbs.db
+
+# 口径库的派生数据：随时可删，删了 canon_check 会重建。
+canon/index.json
+canon/.lock
+canon/entries/*.tmp-*
+
+# 本地临时工作区与记忆插件的会话日志
+.dsh/notepad.json
+.dsh/dsh-memory/
+.dsh-probe/

@@ -1,0 +1,33 @@
+{
+  "id": "R-003",
+  "kind": "rule",
+  "title": "坏档拒绝写入",
+  "statement": "条目文件解析失败时拒绝一切写入，绝不从空库起，否则全部标记变 DANGLING 且 id 会被复用。",
+  "aliases": [
+    "拒绝一切写入"
+  ],
+  "deprecatedPhrases": [],
+  "tags": [
+    "容错"
+  ],
+  "rev": 1,
+  "supersededBy": null,
+  "createdAt": 1795565010737,
+  "updatedAt": 1795565010737,
+  "history": [
+    {
+      "seq": 1,
+      "rev": 1,
+      "change": "semantic",
+      "at": 1795565010737,
+      "actor": {
+        "kind": "unknown"
+      },
+      "note": "初始登记",
+      "statement": "条目文件解析失败时拒绝一切写入，绝不从空库起，否则全部标记变 DANGLING 且 id 会被复用。",
+      "aliases": [
+        "拒绝一切写入"
+      ]
+    }
+  ]
+}

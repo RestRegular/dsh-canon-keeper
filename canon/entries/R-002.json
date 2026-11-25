@@ -1,0 +1,33 @@
+{
+  "id": "R-002",
+  "kind": "rule",
+  "title": "核验必须能从文档现状证明",
+  "statement": "canon_resolve 是验证不是盖章：标记必须已钉到当前版本，记 updated 要求段落确实变了，记 confirmed 必须写理由。",
+  "aliases": [
+    "验证不是盖章"
+  ],
+  "deprecatedPhrases": [],
+  "tags": [
+    "核心机制"
+  ],
+  "rev": 1,
+  "supersededBy": null,
+  "createdAt": 1795565010730,
+  "updatedAt": 1795565010730,
+  "history": [
+    {
+      "seq": 1,
+      "rev": 1,
+      "change": "semantic",
+      "at": 1795565010730,
+      "actor": {
+        "kind": "unknown"
+      },
+      "note": "初始登记",
+      "statement": "canon_resolve 是验证不是盖章：标记必须已钉到当前版本，记 updated 要求段落确实变了，记 confirmed 必须写理由。",
+      "aliases": [
+        "验证不是盖章"
+      ]
+    }
+  ]
+}

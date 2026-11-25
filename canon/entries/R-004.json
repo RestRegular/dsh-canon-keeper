@@ -1,0 +1,47 @@
+{
+  "id": "R-004",
+  "kind": "rule",
+  "title": "repoint 不钉版本",
+  "statement": "canon repoint 默认只预览，且改指向时不钉版本，因为目标条目的 rev 与来源无关；必须显式给 --paths，不猜范围。",
+  "aliases": [
+    "改指向时不钉版本"
+  ],
+  "deprecatedPhrases": [],
+  "tags": [
+    "撞号处理"
+  ],
+  "rev": 2,
+  "supersededBy": null,
+  "createdAt": 1795565010746,
+  "updatedAt": 1795565107831,
+  "history": [
+    {
+      "seq": 1,
+      "rev": 1,
+      "change": "semantic",
+      "at": 1795565010746,
+      "actor": {
+        "kind": "unknown"
+      },
+      "note": "初始登记",
+      "statement": "canon repoint 默认只预览，且改指向时不钉版本，因为目标条目的 rev 与来源无关。",
+      "aliases": [
+        "改指向时不钉版本"
+      ]
+    },
+    {
+      "seq": 2,
+      "rev": 2,
+      "change": "semantic",
+      "at": 1795565107831,
+      "actor": {
+        "kind": "unknown"
+      },
+      "note": "语义改动",
+      "statement": "canon repoint 默认只预览，且改指向时不钉版本，因为目标条目的 rev 与来源无关；必须显式给 --paths，不猜范围。",
+      "aliases": [
+        "改指向时不钉版本"
+      ]
+    }
+  ]
+}

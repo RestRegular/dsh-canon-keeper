@@ -1,0 +1,33 @@
+{
+  "id": "R-001",
+  "kind": "rule",
+  "title": "未钉版本算未验证",
+  "statement": "省略 @rN 的标记按未验证处理：不计入覆盖率，canon_check 报 UNPINNED，退出码为 2。",
+  "aliases": [
+    "按未验证处理"
+  ],
+  "deprecatedPhrases": [],
+  "tags": [
+    "核心机制"
+  ],
+  "rev": 1,
+  "supersededBy": null,
+  "createdAt": 1795565010714,
+  "updatedAt": 1795565010714,
+  "history": [
+    {
+      "seq": 1,
+      "rev": 1,
+      "change": "semantic",
+      "at": 1795565010714,
+      "actor": {
+        "kind": "unknown"
+      },
+      "note": "初始登记",
+      "statement": "省略 @rN 的标记按未验证处理：不计入覆盖率，canon_check 报 UNPINNED，退出码为 2。",
+      "aliases": [
+        "按未验证处理"
+      ]
+    }
+  ]
+}
