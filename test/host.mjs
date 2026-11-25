@@ -131,7 +131,7 @@ await test('Config 校验器：夹紧数值、兜底非法输入', () => {
   assert.ok(std.validate({ lockTimeoutMs: 1 }).value.lockTimeoutMs >= 1000, 'lockTimeoutMs 要夹紧');
   const bad = std.validate({ mentionMinLength: 'abc' });
   assert.equal(bad.value.mentionMinLength.cjk, 2, '非法输入回落默认');
-  assert.equal(std.validate({}).value.storeDir, 'canon', 'storeDir 默认 canon');
+  assert.equal(std.validate({}).value.storeDir, '.dsh/canon-keeper', 'storeDir 默认 .dsh/canon-keeper');
 });
 
 await test('normalizeConfig：解析 JSON 样式表与逗号列表', () => {

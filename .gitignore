@@ -4,12 +4,12 @@ node_modules/
 Thumbs.db
 
 # 口径库的派生数据：随时可删，删了 canon_check 会重建。
-canon/index.json
-canon/.lock
-canon/entries/*.tmp-*
+.dsh/canon-keeper/index.json
+.dsh/canon-keeper/.lock
+.dsh/canon-keeper/entries/*.tmp-*
 
 # 运行时审计流水：记录的是本地核验动作，不进版本库。
-canon/audit.jsonl
+.dsh/canon-keeper/audit.jsonl
 
 # codegraph 本地索引，各机器自行 init。
 .codegraph/

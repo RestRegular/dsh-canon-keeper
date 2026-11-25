@@ -1,6 +1,6 @@
 ---
 name: canon-keeper
-description: Use when a project keeps a canon library (a `canon/` directory of numbered entries such as D-001 / R-002) and you need to register, pin, re-verify, or audit the key facts that documents keep citing — decisions, rules, fixed values, terminology. Covers the versioned marker syntax for every file format, when to use each of the seven `canon_*` tools, and what the verifier actually checks.
+description: Use when a project keeps a canon library (a `.dsh/canon-keeper/` directory of numbered entries such as D-001 / R-002) and you need to register, pin, re-verify, or audit the key facts that documents keep citing — decisions, rules, fixed values, terminology. Covers the versioned marker syntax for every file format, when to use each of the seven `canon_*` tools, and what the verifier actually checks.
 ---
 
 # 口径守护（canon-keeper）
@@ -76,7 +76,7 @@ description: Use when a project keeps a canon library (a `canon/` directory of n
 ## 存储与安全
 
 ```
-canon/
+.dsh/canon-keeper/
   entries/<ID>.json   权威数据，纳入 git
   audit.jsonl         追加式审计，纳入 git
   index.json          派生索引，可删

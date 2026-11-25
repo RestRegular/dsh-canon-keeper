@@ -98,7 +98,7 @@ async function main(argv) {
   const cwd = process.cwd();
   const ops = new CanonOps({
     cwd,
-    storeDir: path.resolve(cwd, typeof flags.store === 'string' ? flags.store : 'canon'),
+    storeDir: path.resolve(cwd, typeof flags.store === 'string' ? flags.store : '.dsh/canon-keeper'),
     lockTimeoutMs: 30_000,
   });
   await ops.ensure();

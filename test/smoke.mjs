@@ -21,7 +21,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { CanonOps } from '../lib/ops.js';
-import { StoreError } from '../lib/store.js';
+import { StoreError, defaultStoreDir } from '../lib/store.js';
 import {
   extractMarkers,
   maskInlineCode,
@@ -635,6 +635,70 @@ await test('stats 的三个试跑指标可算', async () => {
   assert.equal(stats.unpinned, 1);
   assert.equal(stats.confirmed, 1);
   assert.ok(stats.coverage > 0 && stats.coverage < 1, `coverage=${stats.coverage}`);
+});
+
+await test('旧 canon/ 数据自动迁移到默认目录（复制，不删旧目录）', async () => {
+  const dir = await makeWorkspace();
+  // 在旧默认目录 canon/ 造一条真实条目 + 审计，再用默认 storeDir 建 ops。
+  const legacyEntries = path.join(dir, 'canon', 'entries');
+  await fs.mkdir(legacyEntries, { recursive: true });
+  const legacyEntry = {
+    id: 'D-001', kind: 'decision', title: '旧库决策', statement: '超时默认 8 秒',
+    aliases: ['8 秒超时'], deprecatedPhrases: [], tags: [], rev: 1,
+    supersededBy: null, createdAt: 1, updatedAt: 1,
+    history: [{ seq: 1, rev: 1, change: 'add', at: 1, actor: 'test', note: '旧库登记', statement: '超时默认 8 秒', aliases: ['8 秒超时'] }],
+  };
+  await fs.writeFile(path.join(legacyEntries, 'D-001.json'), `${JSON.stringify(legacyEntry, null, 2)}\n`, 'utf8');
+  await fs.writeFile(path.join(dir, 'canon', 'audit.jsonl'), `${JSON.stringify({ at: 1, op: 'add', entryId: 'D-001' })}\n`, 'utf8');
+
+  const ops = new CanonOps({ cwd: dir, storeDir: defaultStoreDir(dir) });
+  await ops.ensure();
+
+  // 新库能读到迁移过来的条目。
+  assert.equal(ops.store.list().length, 1, '新库应读到迁移过来的条目');
+  assert.equal(ops.store.get('D-001').statement, '超时默认 8 秒');
+  // 旧目录原样保留作备份。
+  const oldStillThere = await fs.readFile(path.join(legacyEntries, 'D-001.json'), 'utf8');
+  assert.ok(oldStillThere.includes('旧库决策'), '旧目录必须保留');
+  // 审计里有一条迁移记录。
+  const audit = await ops.store.readAudit();
+  assert.ok(audit.some((e) => e.op === 'migrate-store'), '应记录一次迁移');
+});
+
+await test('迁移是幂等的：重复初始化不会覆盖已迁入的新库', async () => {
+  const dir = await makeWorkspace();
+  const legacyEntries = path.join(dir, 'canon', 'entries');
+  await fs.mkdir(legacyEntries, { recursive: true });
+  const mk = (statement) => ({
+    id: 'D-001', kind: 'decision', title: statement, statement,
+    aliases: [], deprecatedPhrases: [], tags: [], rev: 1,
+    supersededBy: null, createdAt: 1, updatedAt: 1,
+    history: [{ seq: 1, rev: 1, change: 'add', at: 1, actor: 'test', note: statement, statement, aliases: [] }],
+  });
+  await fs.writeFile(path.join(legacyEntries, 'D-001.json'), `${JSON.stringify(mk('旧库的值'), null, 2)}\n`, 'utf8');
+
+  const ops1 = new CanonOps({ cwd: dir, storeDir: defaultStoreDir(dir) });
+  await ops1.ensure();
+  // 用户在新库里把 D-001 的 statement 直接改掉（模拟已迁入后又在用）。
+  const migrated = ops1.store.get('D-001');
+  await ops1.store.persist({ ...migrated, statement: '新库改过的值' }, migrated.file);
+  await ops1.store.reload();
+
+  // 再来一次初始化，旧目录还在，但新库已有条目，不应被旧库覆盖。
+  const ops2 = new CanonOps({ cwd: dir, storeDir: defaultStoreDir(dir) });
+  await ops2.ensure();
+  assert.equal(ops2.store.get('D-001').statement, '新库改过的值', '新库数据不能被旧库覆盖');
+  const audit = await ops2.store.readAudit();
+  assert.equal(audit.filter((e) => e.op === 'migrate-store').length, 1, '迁移只应发生一次');
+});
+
+await test('自定义 storeDir 不触发迁移', async () => {
+  const dir = await makeWorkspace();
+  const custom = path.join(dir, 'my-canon');
+  const ops = new CanonOps({ cwd: dir, storeDir: custom });
+  const result = await ops.migrateLegacyStore();
+  assert.equal(result.migrated, false);
+  assert.equal(result.reason, 'custom-store-dir');
 });
 
 // ---------------------------------------------------------------------------

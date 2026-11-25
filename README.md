@@ -7,7 +7,7 @@
 ## 它怎么工作
 
 ```
-canon/entries/D-001.json      权威数据：一条口径一个文件
+.dsh/canon-keeper/entries/D-001.json   权威数据：一条口径一个文件
         ↓
 文档里：所有对外网关调用的超时默认 8 秒。<!-- canon:D-001@r3 -->
         ↓
@@ -88,7 +88,7 @@ npx dsh-canon-keeper repoint D-001 D-007 --paths docs/a.md,docs/b.md --apply  # 
 
 `repoint` 默认只预览，且**不钉版本** —— 目标条目的 `rev` 和来源无关，钉个数字就是猜；`--paths` 必须显式给，工具不猜范围。<!-- canon:R-004@r2 -->
 
-`canon/audit.jsonl` 必须配 `.gitattributes` 的 `merge=union`，否则两分支各追加必冲突。解冲突时 `take ours` 会丢掉一边的条目文件，让「同 id 两个文件」这条检测失效 —— 所以每条 `add` 事件都带 `fingerprint`（id + 归一化正文的指纹），`canon_check` 发现同一 id 有两条不同指纹的登记就报 `ID_COLLISION`。
+`.dsh/canon-keeper/audit.jsonl` 必须配 `.gitattributes` 的 `merge=union`，否则两分支各追加必冲突。解冲突时 `take ours` 会丢掉一边的条目文件，让「同 id 两个文件」这条检测失效 —— 所以每条 `add` 事件都带 `fingerprint`（id + 归一化正文的指纹），`canon_check` 发现同一 id 有两条不同指纹的登记就报 `ID_COLLISION`。
 
 ## 命令与退出码
 
@@ -117,16 +117,17 @@ npx dsh-canon-keeper repoint D-001 D-007 --paths docs/a.md,docs/b.md --apply  # 
 ## 存储与容错
 
 ```
-canon/
+.dsh/canon-keeper/
   entries/<ID>.json   权威数据，纳入 git
   audit.jsonl         追加式审计，纳入 git（配 merge=union）
   index.json          派生索引，可删，已 gitignore
   .lock               跨进程写锁
 ```
 
+- **旧库自动迁移**：从旧版升级后，若工作区根还留着 `canon/` 而新目录 `.dsh/canon-keeper/` 为空，插件会在首次使用时把旧 `entries/*.json` 与 `audit.jsonl` **复制**到新目录，旧目录原样保留作备份。只在使用默认 `storeDir`、目标空库、旧库非空三重条件下触发；重复初始化幂等，不覆盖用户已写进新库的数据。自定义 `storeDir` 一律不动。
 - **坏档拒绝写入**：任何条目文件解析失败 → 所有写操作报 `STORE_UNREADABLE`。绝不「从空库起」——那会让全部标记变 `DANGLING`，且 id 会被复用。<!-- canon:R-003@r1 -->
 - **索引坏了就重建**：派生数据，删掉即可。
-- **跨进程锁**：`canon/.lock` 用 `open(wx)` 抢占，超 `lockTimeoutMs` 视为残留锁接管。多会话 + CLI 同时写不会丢更新。
+- **跨进程锁**：`.dsh/canon-keeper/.lock` 用 `open(wx)` 抢占，超 `lockTimeoutMs` 视为残留锁接管。多会话 + CLI 同时写不会丢更新。
 - **只读扫描**：扫描永远不改文档。补钉是显式命令。
 
 ## 它刻意不做什么
@@ -151,7 +152,7 @@ canon/
 
 | 字段 | 默认 | 说明 |
 |---|---|---|
-| `storeDir` | `canon` | 口径库目录 |
+| `storeDir` | `.dsh/canon-keeper` | 口径库目录 |
 | `markerStyles` | 见上表 | 扩展名 → 样式（JSON） |
 | `includeExtensions` | `md,markdown,mdx,txt,rst,adoc` | 参与扫描 |
 | `ignoreGlobs` | `node_modules,.git,dist,build,out,…` | 排除 |

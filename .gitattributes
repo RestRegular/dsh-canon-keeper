@@ -2,11 +2,11 @@
 # merge=union 让两边的新增行都保留下来 —— 这正是我们要的：
 # 审计只需要「都记下来」，顺序不重要；真正的一致性靠每条 add 事件里的
 # fingerprint 兜底（同 id 两条不同指纹 → canon_check 报 ID_COLLISION）。
-canon/audit.jsonl merge=union
+.dsh/canon-keeper/audit.jsonl merge=union
 
 # 派生索引可删可重建，不参与合并。
-canon/index.json merge=ours
-canon/.lock merge=ours
+.dsh/canon-keeper/index.json merge=ours
+.dsh/canon-keeper/.lock merge=ours
 
 # 文档统一按文本处理，避免 Windows 上把标记文件当二进制。
 *.md text eol=lf

@@ -30,7 +30,7 @@ const field = (type, description, extra = {}) => ({
 });
 
 const CONFIG_FIELDS = {
-  storeDir: field('string', '口径库目录（工作区相对路径），默认 canon，建议纳入 git。'),
+  storeDir: field('string', '口径库目录（工作区相对路径），默认 .dsh/canon-keeper，建议纳入 git。'),
   markerStyles: field('string', '扩展名到标记样式的映射，JSON 对象，例如 {"md":"html"}；留空用内置默认。'),
   includeExtensions: field('string', '参与扫描的扩展名，逗号分隔，默认 md,markdown,mdx,txt,rst,adoc。'),
   ignoreGlobs: field('string', '不扫描的路径 glob，逗号分隔，每行一个也可。'),
@@ -45,7 +45,7 @@ const CONFIG_FIELDS = {
 };
 
 const DEFAULTS = {
-  storeDir: 'canon',
+  storeDir: '.dsh/canon-keeper',
   markerStyles: '',
   includeExtensions: SCAN_DEFAULTS.includeExtensions.join(','),
   ignoreGlobs: SCAN_DEFAULTS.ignoreGlobs.join(','),
@@ -294,5 +294,5 @@ export function apply(ctx, rawConfig) {
 export { CanonOps };
 export { TOOL_NAMES } from './lib/tools.js';
 export { ROUTE, API } from './lib/routes.js';
-export const PLUGIN_VERSION = '0.3.1';
+export const PLUGIN_VERSION = '0.4.0';
 export const HOME = os.homedir();

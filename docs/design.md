@@ -68,10 +68,12 @@
 
 ## 3. 存储布局
 
-默认 `storeDir` = `<工作区>/canon`（**git 跟踪**，多工作树/克隆之间靠 git 同步）：
+默认 `storeDir` = `<工作区>/.dsh/canon-keeper`（**git 跟踪**，多工作树/克隆之间靠 git 同步）。
+
+从旧版（`storeDir` = `canon/`）升级时，若工作区仍有旧 `canon/` 且新目录为空，`CanonOps.init()` 会**复制**旧 `entries/*.json` 与 `audit.jsonl` 到新目录（旧目录保留作备份），并写一条 `migrate-store` 审计。触发条件三重且幂等：仅默认 `storeDir`、目标空库、旧库非空；重复初始化或自定义路径都不迁移、不覆盖：
 
 ```
-canon/
+.dsh/canon-keeper/
   entries/
     D-001.json          # 一条口径一个文件，权威数据
     R-002.json
@@ -82,14 +84,14 @@ canon/
 `.gitignore` 片段（写进 README，安装时提示）：
 
 ```
-canon/index.json
-canon/.lock
+.dsh/canon-keeper/index.json
+.dsh/canon-keeper/.lock
 ```
 
 `.gitattributes` 片段（**必须**，写进 README）：
 
 ```
-canon/audit.jsonl merge=union
+.dsh/canon-keeper/audit.jsonl merge=union
 ```
 
 `audit.jsonl` 是纯 append 的 JSONL，两个分支各自在末尾追加是常态；不设 `merge=union` 则每次合并必冲突。
@@ -363,7 +365,7 @@ rev 用本工具返回的文本，不要自己写数字。口径改了要用 can
 ```md
 ## 口径（canon）
 
-本仓库的关键事实登记在 `canon/entries/`，每条有 id 与语义版本 `rev`。
+本仓库的关键事实登记在 `.dsh/canon-keeper/entries/`，每条有 id 与语义版本 `rev`。
 陈述这些事实的句子后面必须加标记：`<!-- canon:D-001@r3 -->`（MDX 用 `{/* canon:D-001@r3 */}`）。
 
 - 新增事实：先 `canon_list({query})` 查重，再 `canon_add` → 把返回的标记贴进文档。
@@ -440,7 +442,7 @@ canon stats                           # 试跑三个指标 + unpinned 计数
 
 | 字段 | 默认 | 说明 |
 |---|---|---|
-| `storeDir` | `canon` | 工作区相对路径，默认纳入 git |
+| `storeDir` | `.dsh/canon-keeper` | 工作区相对路径，默认纳入 git |
 | `markerStyles` | 见 §4.1 | 扩展名 → 样式，影响生成 |
 | `includeExtensions` | `md,markdown,mdx,txt,rst,adoc` | 参与扫描 |
 | `ignoreGlobs` | `node_modules/**,.git/**,dist/**,docs/design.md` | 排除 |
@@ -457,7 +459,7 @@ canon stats                           # 试跑三个指标 + unpinned 计数
 | 场景 | 做法 |
 |---|---|
 | 同进程并发 | 每个条目文件读时拿 `contentHash`，写前校验；不符 → `CONFLICT`，重读重试 1 次 |
-| 跨进程（多会话 / CLI） | `canon/.lock` 用 `open(wx)` 抢锁，含 pid + 时间戳；超 `lockTimeoutMs` 视为残留锁并接管；写操作全程持锁 |
+| 跨进程（多会话 / CLI） | `.dsh/canon-keeper/.lock` 用 `open(wx)` 抢锁，含 pid + 时间戳；超 `lockTimeoutMs` 视为残留锁并接管；写操作全程持锁 |
 | 写文件 | 同目录临时文件 → `rename` 原子替换；只碰目标文件 |
 | 条目文件损坏 | **拒绝一切写入**，报 `STORE_UNREADABLE` + 路径 + 建议（从 git 恢复 / 手工修）。不自动重置、不自动重编号 |
 | 索引损坏 | 删掉重建，无副作用 |
