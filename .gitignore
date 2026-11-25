@@ -8,6 +8,12 @@ canon/index.json
 canon/.lock
 canon/entries/*.tmp-*
 
+# 运行时审计流水：记录的是本地核验动作，不进版本库。
+canon/audit.jsonl
+
+# codegraph 本地索引，各机器自行 init。
+.codegraph/
+
 # 本地临时工作区与记忆插件的会话日志
 .dsh/notepad.json
 .dsh/dsh-memory/

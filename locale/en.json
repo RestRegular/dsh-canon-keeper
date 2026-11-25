@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Canon Keeper",
+    "description": "Register project facts as numbered entries with semantic versions, pin them into documents as versioned markers; when a canon changes, every marker pinned to an older revision goes stale and the panel lists each affected location for verification."
+  }
+}

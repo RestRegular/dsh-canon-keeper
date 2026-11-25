@@ -19,6 +19,7 @@ import { CanonOps } from './lib/ops.js';
 import { createCanonTools } from './lib/tools.js';
 import { DEFAULT_MARKER_STYLES } from './lib/marker.js';
 import { SCAN_DEFAULTS } from './lib/scan.js';
+import { createToken, mountRoutes } from './lib/routes.js';
 
 const field = (type, description, extra = {}) => ({
   type,
@@ -218,6 +219,41 @@ export function apply(ctx, rawConfig) {
     }
   });
 
+  // ------------------------------------------------------------------
+  // 面板：回环 HTTP 路由
+  // ------------------------------------------------------------------
+  /** 面板写操作的 token，每次进程启动随机生成。 */
+  const panelToken = createToken();
+
+  /**
+   * 从请求里解析工作区根目录。
+   *
+   * **只认 sessionId 反查出来的 cwd**，不接受客户端直接传路径 —— 否则面板就能
+   * 被用来读写任意目录。会话 id 来自右侧边栏标签页自身，拿不到就明确报错。
+   *
+   * @param {object} payload 请求体/查询参数。
+   * @returns {string} 工作区根目录，解析不出来时为空串。
+   */
+  const cwdOfRequest = (payload) => {
+    const sessionId = typeof payload?.sessionId === 'string' ? payload.sessionId.trim() : '';
+    if (sessionId === '') return '';
+    const sessions = ctx.get('sessions');
+    const session = sessions?.get?.(sessionId);
+    const cwd = session?.header?.cwd;
+    return typeof cwd === 'string' && cwd !== '' ? cwd : '';
+  };
+
+  ctx.inject(['webServer'], (scoped) => {
+    mountRoutes(scoped, {
+      deps: {
+        token: () => panelToken,
+        cwdOf: cwdOfRequest,
+        opsFor,
+      },
+      logger,
+    });
+  });
+
   ctx.effect(() => () => {
     instances.clear();
   }, 'dsh-canon-keeper: instances');
@@ -225,5 +261,6 @@ export function apply(ctx, rawConfig) {
 
 export { CanonOps };
 export { TOOL_NAMES } from './lib/tools.js';
-export const PLUGIN_VERSION = '0.1.0';
+export { ROUTE, API } from './lib/routes.js';
+export const PLUGIN_VERSION = '0.2.0';
 export const HOME = os.homedir();

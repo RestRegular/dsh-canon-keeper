@@ -1,8 +1,11 @@
 # dsh-canon-keeper bundle patch：插入 Host 侧 Loader 行。
 #
 # `name` 必须与 package.json 的 name 逐字节一致 —— 宿主靠它定位包。
-# 当前版本（M1）只有 Host 半：7 个 Agent 工具 + CLI，不含客户端 bundle，
-# 所以 package.json 里没有 `dsh.client`，也没有 client.js。
+#
+# 当前版本（M2）同时有 Host 半与 Client 半：
+#   - Host：7 个 Agent 工具 + CLI + 面板的回环 HTTP 路由（/dsh-canon-keeper/api）。
+#   - Client：右侧边栏「口径」标签页，见 client.js 与 package.json 的 dsh.client。
+# 两者共用 lib/ops.js 这一层，面板与工具不会各走一套判断。
 - insert:
     - id: dsh-canon-keeper
       name: '@restregular/dsh-canon-keeper'

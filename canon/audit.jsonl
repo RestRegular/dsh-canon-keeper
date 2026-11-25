@@ -1,7 +1,0 @@
-{"at":1795565010703,"op":"add","entryId":"D-001","fingerprint":"6e0dad82","actor":{"kind":"unknown"},"note":"初始登记"}
-{"at":1795565010715,"op":"add","entryId":"R-001","fingerprint":"d96fb521","actor":{"kind":"unknown"},"note":"初始登记"}
-{"at":1795565010731,"op":"add","entryId":"R-002","fingerprint":"72b54395","actor":{"kind":"unknown"},"note":"初始登记"}
-{"at":1795565010738,"op":"add","entryId":"R-003","fingerprint":"a17a6a72","actor":{"kind":"unknown"},"note":"初始登记"}
-{"at":1795565010746,"op":"add","entryId":"R-004","fingerprint":"582583ae","actor":{"kind":"unknown"},"note":"初始登记"}
-{"at":1795565107832,"op":"update","entryId":"R-004","fromRev":1,"toRev":2,"change":"semantic","deprecatedAdded":[],"actor":{"kind":"unknown"},"note":""}
-{"at":1795565121266,"op":"resolve","entryId":"R-004","file":"README.md","line":89,"fromRev":2,"toRev":2,"outcome":"updated","verified":true,"actor":{"kind":"cli","pid":27284},"note":"补上 --paths 必须显式给"}

@@ -13,7 +13,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { apply, Config, normalizeConfig, TOOL_NAMES } from '../index.js';
+import { apply, Config, normalizeConfig, TOOL_NAMES, ROUTE, API } from '../index.js';
 
 let passed = 0;
 const failures = [];
@@ -37,15 +37,39 @@ async function test(name, body) {
 
 /**
  * 造一个假宿主上下文。
- * @returns {{ctx: object, registered: Array<object>}} 上下文与注册表。
+ *
+ * `inject` 按名字分派：`tools` 收集工具定义，`webServer` 收集路由。两者都是
+ * index.js 真实注入的服务，缺哪个都不该让其它用例连带失败。
+ *
+ * @param {object} [options] 覆盖。
+ * @returns {{ctx: object, registered: Array<object>, routes: Array<object>}} 上下文与注册表。
  */
-function fakeHost() {
+function fakeHost(options = {}) {
   const registered = [];
+  const routes = [];
+  const sessions = options.sessions ?? {
+    get(id) {
+      if (id === 'sess-known') return { header: { id, cwd: options.cwd ?? process.cwd() } };
+      return undefined;
+    },
+  };
+  const webServer = {
+    getOrigin: () => 'http://127.0.0.1:9999',
+    register(route) {
+      routes.push(route);
+      return () => {};
+    },
+  };
   const ctx = {
     logger: { warn() {}, info() {}, debug() {} },
+    get(key) {
+      if (key === 'sessions') return sessions;
+      if (key === 'webServer') return webServer;
+      return undefined;
+    },
     inject(names, callback) {
-      assert.ok(Array.isArray(names) && names.includes('tools'), 'index.js 应注入 tools');
-      callback({
+      assert.ok(Array.isArray(names), 'inject 的第一个参数应是数组');
+      const scoped = {
         effect(fn) {
           return fn();
         },
@@ -54,13 +78,16 @@ function fakeHost() {
             registered.push(definition);
           },
         },
-      });
+        get: ctx.get,
+        webServer,
+      };
+      callback(scoped);
     },
     effect(fn) {
       fn();
     },
   };
-  return { ctx, registered };
+  return { ctx, registered, routes, sessions, webServer };
 }
 
 process.stdout.write('canon-keeper host smoke\n\n');
@@ -224,6 +251,70 @@ await test('工作区之间互不干扰（按 cwd 分实例）', async () => {
   assert.ok(listB.includes('口径 0 条'), `B 库应还是空的：${listB.slice(0, 80)}`);
   const listA = await byName.get('canon_list').execute({}, execA);
   assert.ok(listA.includes('D-001'), 'A 库应保留自己的条目');
+});
+
+await test('apply 挂载面板路由，前缀与 API 常量一致', () => {
+  const { ctx, routes } = fakeHost();
+  apply(ctx, {});
+  assert.equal(routes.length, 1, '应挂载一条面板路由');
+  assert.equal(routes[0].kind, 'prefix');
+  assert.equal(routes[0].path, ROUTE);
+  assert.equal(typeof routes[0].handler, 'function');
+});
+
+await test('面板的 cwd 只认 sessionId 反查，不接受客户端传路径', async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'canon-panel-'));
+  const { ctx, routes } = fakeHost({ cwd: dir });
+  apply(ctx, {});
+  const handler = routes[0].handler;
+
+  /**
+   * 直接驱动 handler，绕开真实 socket（鉴权已在 routes.mjs 里用真 socket 验过）。
+   * @param {object} options 选项。
+   * @returns {Promise<{status: number, body: any}>} 结果。
+   */
+  const drive = async (options) => {
+    const chunks = [];
+    const req = {
+      method: options.method ?? 'GET',
+      url: options.url,
+      headers: { host: '127.0.0.1:9999', origin: 'http://127.0.0.1:9999', ...(options.headers ?? {}) },
+      socket: { remoteAddress: '127.0.0.1' },
+      on(event, cb) {
+        if (event === 'end') cb();
+        return req;
+      },
+    };
+    const res = {
+      status: 0,
+      headers: {},
+      writeHead(status, headers) {
+        res.status = status;
+        res.headers = headers ?? {};
+      },
+      end(text) {
+        chunks.push(text);
+      },
+    };
+    await handler(req, res);
+    const raw = chunks.join('');
+    return { status: res.status, body: raw === '' ? null : JSON.parse(raw) };
+  };
+
+  // 不传 sessionId，但直接塞一个 cwd：必须拒绝，绝不能拿它去读写
+  const spoofed = await drive({ url: `${API}/overview?cwd=${encodeURIComponent(dir)}` });
+  assert.equal(spoofed.status, 400);
+  assert.match(spoofed.body.error, /缺少工作区路径/u);
+
+  // 未知会话同样拒绝
+  const unknown = await drive({ url: `${API}/overview?sessionId=sess-nope` });
+  assert.equal(unknown.status, 400);
+  assert.match(unknown.body.error, /缺少工作区路径/u);
+
+  // 已知会话才放行，并且用的是会话的 cwd
+  const ok = await drive({ url: `${API}/overview?sessionId=sess-known` });
+  assert.equal(ok.status, 200, JSON.stringify(ok.body).slice(0, 200));
+  assert.equal(ok.body.ok, true);
 });
 
 process.stdout.write('\nsummary\n');
