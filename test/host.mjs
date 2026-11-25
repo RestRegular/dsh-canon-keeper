@@ -47,6 +47,8 @@ async function test(name, body) {
 function fakeHost(options = {}) {
   const registered = [];
   const routes = [];
+  const sections = [];
+  const providers = [];
   const sessions = options.sessions ?? {
     get(id) {
       if (id === 'sess-known') return { header: { id, cwd: options.cwd ?? process.cwd() } };
@@ -60,11 +62,25 @@ function fakeHost(options = {}) {
       return () => {};
     },
   };
+  const systemPrompt = {
+    section(section) {
+      sections.push(section);
+      return () => {};
+    },
+  };
+  const skills = {
+    registerProvider(build) {
+      providers.push(build);
+      return () => {};
+    },
+  };
   const ctx = {
     logger: { warn() {}, info() {}, debug() {} },
     get(key) {
       if (key === 'sessions') return sessions;
       if (key === 'webServer') return webServer;
+      if (key === 'systemPrompt') return systemPrompt;
+      if (key === 'skills') return skills;
       return undefined;
     },
     inject(names, callback) {
@@ -80,6 +96,8 @@ function fakeHost(options = {}) {
         },
         get: ctx.get,
         webServer,
+        systemPrompt,
+        skills,
       };
       callback(scoped);
     },
@@ -87,7 +105,7 @@ function fakeHost(options = {}) {
       fn();
     },
   };
-  return { ctx, registered, routes, sessions, webServer };
+  return { ctx, registered, routes, sessions, webServer, sections, providers };
 }
 
 process.stdout.write('canon-keeper host smoke\n\n');
@@ -164,7 +182,7 @@ await test('标记约定只写在 canon_add / canon_update 里', () => {
   assert.deepEqual(withMarker, ['canon_add', 'canon_update'], '其它工具不该重复标记语法');
 });
 
-await test('canon_resolve 的 items 是对象数组且要求 note', () => {
+await test('canon_resolve 的 items 是对象数组且逐字段必填', () => {
   const { ctx, registered } = fakeHost();
   apply(ctx, {});
   const resolve = registered.find((definition) => definition.name === 'canon_resolve');
@@ -172,8 +190,73 @@ await test('canon_resolve 的 items 是对象数组且要求 note', () => {
   assert.equal(items.type, 'array');
   assert.equal(items.required, true);
   assert.equal(items.items.type, 'object');
-  assert.deepEqual(items.items.required.sort(), ['entryId', 'file', 'note', 'outcome']);
+  // 必填只能逐字段写 required: true —— 数组层的 required: [...] 会被宿主 DSL 拒绝。
+  assert.equal(Object.hasOwn(items.items, 'required'), false, 'items 内不能出现 required 数组');
+  for (const key of ['entryId', 'file', 'note', 'outcome']) {
+    assert.equal(items.items.properties[key].required, true, `${key} 应逐字段标 required: true`);
+  }
   assert.deepEqual(items.items.properties.outcome.enum, ['updated', 'confirmed']);
+});
+
+await test('常驻系统提示：注入一段「什么时候用」，且不含口径正文', () => {
+  const { ctx, sections } = fakeHost();
+  apply(ctx, {});
+  const section = sections.find((item) => item.name === 'canon-keeper:policy');
+  assert.notEqual(section, undefined, '应挂上 canon-keeper:policy 段落');
+  assert.equal(typeof section.text, 'function', 'text 应是函数（每轮重新求值）');
+  const text = section.text();
+  assert.ok(text.includes('canon_list'), '要指路到具体工具');
+  assert.ok(text.includes('canon:D-001@r3'), '要给一个标记样例');
+  assert.ok(text.includes('canon-keeper'), '要指向随包技能');
+  // 关键约束：不塞口径正文 —— 注入只讲机制，不讲内容。
+  assert.ok(text.length < 1200, `常驻说明要短，实际 ${text.length} 字`);
+});
+
+await test('常驻系统提示：injectPrompt=false 时返回空串而不是不挂段落', () => {
+  const { ctx, sections } = fakeHost();
+  apply(ctx, { injectPrompt: false });
+  const section = sections.find((item) => item.name === 'canon-keeper:policy');
+  assert.notEqual(section, undefined, '段落仍应挂上（换开关不该留下孤儿段落）');
+  assert.equal(section.text(), '', '关掉后应返回空串');
+});
+
+await test('随包技能：注册 provider，能列出并加载 canon-keeper', async () => {
+  const { ctx, providers } = fakeHost();
+  apply(ctx, {});
+  assert.equal(providers.length, 1, '应注册一个技能 provider');
+  const build = providers[0];
+  const registry = build();
+  assert.equal(registry.name, 'dsh-canon-keeper');
+  const candidates = await registry.list();
+  const names = candidates.map((item) => item.name);
+  assert.deepEqual(names, ['canon-keeper']);
+  const candidate = candidates[0];
+  assert.equal(candidate.source, 'bundled');
+  assert.equal(candidate.rank, 600, '要和宿主 BUNDLED_SKILL_RANK 对齐');
+  assert.equal(candidate.resourceBase.kind, 'directory');
+  assert.ok(candidate.description.length >= 40, 'description 是唯一的路由信号，不能太短');
+  const loaded = await registry.get({ name: 'canon-keeper' });
+  assert.ok(loaded.content.includes('canon:D-001@r3'), '正文应含标记语法');
+  assert.ok(loaded.content.includes('canon_resolve'), '正文应讲清各工具分工');
+  assert.equal(loaded.rank, undefined, 'rank 是注册表用的，不该进加载结果');
+});
+
+await test('随包技能：bundledSkill=false 时不注册', () => {
+  const { ctx, providers } = fakeHost();
+  apply(ctx, { bundledSkill: false });
+  assert.equal(providers.length, 0);
+});
+
+await test('常驻提示与随包技能都缺服务时不拖垮工具注册', () => {
+  const { ctx, registered } = fakeHost();
+  // 模拟老宿主：没有 systemPrompt / skills 服务
+  const original = ctx.inject;
+  ctx.inject = (names, callback) => {
+    if (names.includes('systemPrompt') || names.includes('skills')) return;
+    return original(names, callback);
+  };
+  apply(ctx, {});
+  assert.equal(registered.length, 7, '工具注册不受影响');
 });
 
 await test('工具在真实工作区里能跑通一条完整链路', async () => {

@@ -20,6 +20,8 @@ import { createCanonTools } from './lib/tools.js';
 import { DEFAULT_MARKER_STYLES } from './lib/marker.js';
 import { SCAN_DEFAULTS } from './lib/scan.js';
 import { createToken, mountRoutes } from './lib/routes.js';
+import { mountPrompt } from './lib/prompt.js';
+import { mountBundledSkills } from './lib/skills.js';
 
 const field = (type, description, extra = {}) => ({
   type,
@@ -38,6 +40,8 @@ const CONFIG_FIELDS = {
   maxFiles: field('integer', '单次扫描的文件数上限，默认 2000。', { min: 1, max: 200000 }),
   maxFileBytes: field('integer', '单个文件体积上限（字节），默认 524288。', { min: 1024, max: 104857600 }),
   lockTimeoutMs: field('integer', '跨进程写锁的过期时间（毫秒），默认 30000。', { min: 1000, max: 600000 }),
+  injectPrompt: field('boolean', '是否在系统提示里常驻一段「有这个机制、什么时候用」的说明，默认 true。关掉后 Agent 只能靠工具描述自己发现。'),
+  bundledSkill: field('boolean', '是否注册随包技能（完整标记语法与核验口径），默认 true。'),
 };
 
 const DEFAULTS = {
@@ -51,6 +55,8 @@ const DEFAULTS = {
   maxFiles: SCAN_DEFAULTS.maxFiles,
   maxFileBytes: SCAN_DEFAULTS.maxFileBytes,
   lockTimeoutMs: 30_000,
+  injectPrompt: true,
+  bundledSkill: true,
 };
 
 /**
@@ -122,6 +128,8 @@ export function normalizeConfig(raw) {
     maxFiles: integer(source.maxFiles, DEFAULTS.maxFiles, 1, 200000),
     maxFileBytes: integer(source.maxFileBytes, DEFAULTS.maxFileBytes, 1024, 104857600),
     lockTimeoutMs: integer(source.lockTimeoutMs, DEFAULTS.lockTimeoutMs, 1000, 600000),
+    injectPrompt: bool(source.injectPrompt, DEFAULTS.injectPrompt),
+    bundledSkill: bool(source.bundledSkill, DEFAULTS.bundledSkill),
   };
 }
 
@@ -215,8 +223,32 @@ export function apply(ctx, rawConfig) {
         scoped.effect(() => scoped.tools.register(definition), `dsh-canon-keeper: ${definition.name} tool`);
       }
     } catch (error) {
-      logger?.warn?.(`[dsh-canon-keeper] tools registration failed: ${error?.message ?? error}`);
+      // 用 error 级、带栈：这里的失败是**整套机制静默消失**（七个工具一个都没
+      // 注册，界面上却一切正常）。0.2.0 就是被一行 warn 埋掉的 —— 参数 DSL 写错
+      // 一个 required 数组，真实 defineTool 抛 JsonSchemaError，谁都没看见。
+      // 不回抛：面板与 CLI 还能用，但日志里必须能一眼看出「工具没上」。
+      const detail = error instanceof Error ? (error.stack ?? error.message) : String(error);
+      logger?.error?.(`[dsh-canon-keeper] 工具注册失败，本次会话里 canon_* 全部不可用：${detail}`);
     }
+  });
+
+  // ------------------------------------------------------------------
+  // 常驻系统提示 + 随包技能：让 Agent 知道这套机制存在
+  //
+  // 工具描述只有**被调用之后**才进模型视野。没有触发点，Agent 不会去调，
+  // 描述写得再全也是死代码。这两段各管一半：常驻说明给「什么时候用」，
+  // 随包技能给完整细节（按需加载，不占常驻 context）。
+  // ------------------------------------------------------------------
+  ctx.inject(['systemPrompt'], (scoped) => {
+    mountPrompt(scoped, {
+      logger,
+      enabled: () => config.injectPrompt,
+    });
+  });
+
+  ctx.inject(['skills'], (scoped) => {
+    if (!config.bundledSkill) return;
+    mountBundledSkills(scoped, { logger });
   });
 
   // ------------------------------------------------------------------
@@ -262,5 +294,5 @@ export function apply(ctx, rawConfig) {
 export { CanonOps };
 export { TOOL_NAMES } from './lib/tools.js';
 export { ROUTE, API } from './lib/routes.js';
-export const PLUGIN_VERSION = '0.2.0';
+export const PLUGIN_VERSION = '0.3.0';
 export const HOME = os.homedir();

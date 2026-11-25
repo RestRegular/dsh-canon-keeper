@@ -1,6 +1,6 @@
 {
   "name": "@restregular/dsh-canon-keeper",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Canon Keeper — register the key facts of a project (decisions, rules, values, terms) as numbered canon entries with semantic versions, pin them into documents as versioned markers, and mechanically list every place that goes stale when a fact changes. · 口径守护：把项目关键事实登记成带语义版本的编号条目，用带版本的标记钉进文档，口径一改就能机械列出所有失效位置并逐处核验。",
   "icon": "./icon.svg",
   "type": "module",
@@ -21,6 +21,7 @@
     "client.js",
     "lib/*.js",
     "bin/*.mjs",
+    "skills/*/SKILL.md",
     "locale/*.json",
     "cordis.patch.yml",
     "icon.svg",
