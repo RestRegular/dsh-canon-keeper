@@ -413,6 +413,18 @@ canon stats                           # 试跑三个指标 + unpinned 计数
 - UNPINNED 位置单独一组「未验证」，`rev > 1` 时不给「一键补钉」，只能逐处核验。
 - 只用 `--dsw-alias-*` token。
 
+### 9.0 槽位组件拿不到 `ctx`（实现期修正）
+
+宿主的槽位组件 props 由 `OwnerOf & KeyPropsOf & SlotInjectFace & ScopeStandardProps` 再加 locale / store 组合而成 —— **没有 `ctx`**。`ScopeStandardProps` 在 session 作用域只补 `sessionId`（和 `useChat` 之类）。
+
+0.3.0 因此在面板里写了 `props?.ctx`，取到 `undefined`，`openFilePreview` 里的 `ctx?.get?.('sidebarRight')` 落空，点击必然失败。错误文案写成「右侧栏服务还没就绪」，把排查引向了根本不存在的时序问题 —— 实际上服务一直在，只是没拿到上下文。
+
+正确做法：
+
+- 在 `apply(ctx)` 里把上下文存到模块作用域（`pluginCtx = ctx`），组件按模块变量取用；每次点击重新 `ctx.get`，不要缓存服务实例。
+- 需要宿主的服务就写进插件的 `inject: [...]`（本插件是 `['slots', 'sidebarRight']`），apply 会等它就绪。
+- 想在 props 里拿能力，只能用 slot 注册时的 `inject: (sessionId) => ({…})` 面，宿主会把它并进 props；这不是 `ctx`。
+
 ### 9.1 本地 HTTP 鉴权
 
 - 前缀 `/dsh-canon-keeper/api`。
@@ -502,6 +514,8 @@ M1.5 的覆盖率实测暴露了一个设计缺陷：**工具描述只有在被�
 | 锁残留 | 写操作被阻塞 | pid + 时间戳 + 超时接管 |
 | MDX 里标记写法错 | 文档构建失败 | 按扩展名预设样式；`BAD_MARKER` 早报 |
 | 回环写接口被网页滥用 | 数据被改 | token + Origin/Host + 回环三重校验 |
+| 槽位组件取 `props.ctx` | 功能永远失败（0.3.0 实测） | 上下文存模块作用域；服务写进 `inject: [...]`；`test/client.mjs` 用迷你 React 真渲染真点击 |
+| 离线测试只摊平元素树 | 假绿灯（hooks 无状态、异步不落地） | 迷你 React 必须让 hooks 持久、`setState` 重渲染、effect 跑完再放宏任务 |
 
 ## 15. 拍板记录
 

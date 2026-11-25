@@ -294,5 +294,5 @@ export function apply(ctx, rawConfig) {
 export { CanonOps };
 export { TOOL_NAMES } from './lib/tools.js';
 export { ROUTE, API } from './lib/routes.js';
-export const PLUGIN_VERSION = '0.3.0';
+export const PLUGIN_VERSION = '0.3.1';
 export const HOME = os.homedir();

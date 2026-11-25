@@ -168,10 +168,17 @@ canon/
 ```bash
 npm run test:lib    # 纯逻辑，不依赖宿主（23 项）
 npm run test:host   # 宿主装配 + 工具链路（17 项）
-npm test            # 全部
+npm test            # 全部（含 client 的 6 项）
 ```
 
 `test/stub-tools.mjs` **复刻宿主的参数 DSL 校验**，不是万能放行。0.2.0 曾因此在宿主里静默失效：`canon_resolve` 在数组 `items` 里写了 `required: [...]`，真实 `defineTool` 抛 `JsonSchemaError`，被 `try/catch` 吞成一行 warn —— 七个工具一个都没注册，界面上看不出任何异常。离线测试必须能复现宿主的拒绝，否则它只是在给自己发绿灯。
+
+`test/client.mjs` 用**迷你 React 运行时**（真跑 hooks、真触发重渲染、真执行 effect）把 `client.js` 装进假 `window.__ModuleLoader__` 里渲染。0.3.0 的「打不开预览：右侧栏服务还没就绪」漏在这里：组件从 `props.ctx` 取上下文，而**宿主的槽位组件 props 里根本没有 `ctx`** —— 宿主组合的是 `OwnerOf & KeyPropsOf & SlotInjectFace & ScopeStandardProps`（只有 `sessionId` 之类）再加 locale / store。所以那不是时序问题，是永远失败，而且错误文案把排查引向了「服务没就绪」这个错误方向。
+
+两个教训：
+
+1. **槽位组件拿不到 `ctx`。** 需要在 `apply(ctx)` 时把上下文存到模块作用域，组件按模块变量取用；或者用 `inject:` 声明服务、靠 slot 的 `inject` 面把能力传进 props。不要指望 `props.ctx`。
+2. **只摊平元素树的测试测不到行为。** 假 React 若把 hooks 退化成「每次渲染都重置」，异步加载的列表永远渲染成骨架屏，点了也没反应 —— 测试会以「没有可点元素」的形式误报，看起来像断言写错了。必须让 hooks 有持久状态、`setState` 触发重渲染、effect 跑完后再放几轮宏任务等 promise 落地。
 
 设计文档见 [docs/design.md](docs/design.md)，实现细节见 [docs/DETAIL.md](docs/DETAIL.md)。
 

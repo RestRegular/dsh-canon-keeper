@@ -84,7 +84,7 @@
           'panel.editNotLoaded': '段落还没读到，请稍后重试',
           'panel.fileChanged': '文件已被改动，请刷新后重新编辑',
           'panel.openFile': '在右侧栏打开 {file}',
-          'panel.openFailed': '打不开预览：右侧栏服务还没就绪',
+          'panel.openFailed': '打不开预览：右侧栏服务不可用（试试重新打开一次标签页）',
           'onboard.title': '怎么用',
           'onboard.dismiss': '不再显示',
           'onboard.step1': '左侧列表是已登记的口径，点一条看详情：哪些文档引用了它、哪些过期了。',
@@ -143,7 +143,7 @@
           'panel.editNotLoaded': 'The paragraph is not loaded yet; try again',
           'panel.fileChanged': 'The file changed; reload and edit again',
           'panel.openFile': 'Open {file} in the right sidebar',
-          'panel.openFailed': 'Cannot open the preview: the sidebar service is not ready',
+          'panel.openFailed': 'Cannot open the preview: the sidebar service is unavailable. Try reopening this tab.',
           'onboard.title': 'How it works',
           'onboard.dismiss': 'Dismiss',
           'onboard.step1': 'The list on the left is your registered canon. Open one to see which documents reference it and which have gone stale.',
@@ -195,6 +195,18 @@
       // ------------------------------------------------------------------
       // 宿主路由
       // ------------------------------------------------------------------
+
+      /**
+       * 插件的客户端上下文。
+       *
+       * **槽位组件的 props 里没有 `ctx`** —— 宿主组合的是 OwnerOf + KeyPropsOf +
+       * SlotInjectFace + ScopeStandardProps（`sessionId` 之类）+ locale/store，
+       * 上下文本身不会传进来。早期版本从 `props.ctx` 取，永远拿到 undefined，
+       * 于是「在预览里打开」必然失败，还报成「服务还没就绪」误导排查方向。
+       *
+       * 这里在 apply 时把上下文存住，组件按模块作用域取用。
+       */
+      let pluginCtx;
 
       /** 本进程写 token；读一次缓存住。 */
       let writeToken;
@@ -659,16 +671,15 @@
       /**
        * 在右侧栏打开某个文件的预览页。
        *
-       * 服务是冷启动后才 provide 的，所以每次点击都重新 `ctx.get`，不能在
-       * apply 阶段取样一次存着。
+       * 每次点击都重新 `ctx.get`：`sidebarRight` 是冷启动后才 provide 的服务，
+       * apply 阶段取样一次会永远拿到 undefined。
        *
-       * @param {object} ctx 客户端上下文。
        * @param {string} sessionId 会话 id。
        * @param {string} file 文件路径。
        * @returns {boolean} 是否成功打开（服务缺失时返回 false）。
        */
-      function openFilePreview(ctx, sessionId, file) {
-        const right = ctx?.get?.('sidebarRight');
+      function openFilePreview(sessionId, file) {
+        const right = pluginCtx?.get?.('sidebarRight');
         if (right === undefined || right === null || typeof right.openResourceIn !== 'function') return false;
         try {
           right.openResourceIn(sessionId, fileAddressOf(sessionId, file));
@@ -682,7 +693,7 @@
       // 详情
       // ------------------------------------------------------------------
 
-      function DetailView({ ctx, sessionId, entryId, onBack, onChanged }) {
+      function DetailView({ sessionId, entryId, onBack, onChanged }) {
         const [detail, setDetail] = useState(undefined);
         const [error, setError] = useState('');
         const [busy, setBusy] = useState(false);
@@ -932,7 +943,7 @@
                         type: 'button',
                         title: t('panel.openFile', { file: ref.file }),
                         onClick: () => {
-                          if (!openFilePreview(ctx, sessionId, ref.file)) show(t('panel.openFailed'), 'err');
+                          if (!openFilePreview(sessionId, ref.file)) show(t('panel.openFailed'), 'err');
                         },
                       }, `${ref.file}:${ref.line}`),
                       h('span', { className: `ck-tag${stale ? ' ck-tag-warn' : ''}` },
@@ -1019,7 +1030,7 @@
                       type: 'button',
                       title: t('panel.openFile', { file: mention.file }),
                       onClick: () => {
-                        if (!openFilePreview(ctx, sessionId, mention.file)) show(t('panel.openFailed'), 'err');
+                        if (!openFilePreview(sessionId, mention.file)) show(t('panel.openFailed'), 'err');
                       },
                     }, `${mention.file}:${mention.line}`),
                   ),
@@ -1050,7 +1061,7 @@
       // 列表
       // ------------------------------------------------------------------
 
-      function ListView({ ctx, sessionId, onOpen }) {
+      function ListView({ sessionId, onOpen }) {
         const [data, setData] = useState(undefined);
         const [error, setError] = useState('');
         const [busy, setBusy] = useState(false);
@@ -1263,14 +1274,13 @@
 
         if (openId !== undefined) {
           return h(DetailView, {
-            ctx: props?.ctx,
             sessionId,
             entryId: openId,
             onBack: () => setOpenId(undefined),
             onChanged: () => {},
           });
         }
-        return h(ListView, { ctx: props?.ctx, sessionId, onOpen: (id) => setOpenId(id) });
+        return h(ListView, { sessionId, onOpen: (id) => setOpenId(id) });
       }
 
       /**
@@ -1311,6 +1321,9 @@
       // ------------------------------------------------------------------
 
       function apply(ctx) {
+        // 槽位组件的 props 里没有 ctx，只能在这里存住供组件使用。
+        pluginCtx = ctx;
+
         bindLocale(ctx);
         installStyles(ctx);
 
@@ -1362,7 +1375,10 @@
       }
 
       return {
-        inject: ['slots'],
+        // sidebarRight 声明进 inject：标签页本身就渲染在右侧栏里，该服务必然存在；
+        // 声明后 apply 会等它就绪，组件里取用不会落空（宿主的 ui-deliverables
+        // 等插件也是这么声明的）。
+        inject: ['slots', 'sidebarRight'],
         apply,
         // 仅供冒烟测试；宿主不会读取。
         __test: { DICT, CanonTab, CanonTabTitle, CanonIcon, toneOf, statusTextOf, fallbackTranslate },
