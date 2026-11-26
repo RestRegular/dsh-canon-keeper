@@ -54,22 +54,61 @@ function fakeOps() {
         marker: '<!-- canon:D-001@r2 -->',
       };
     },
-    async rescan() {
-      return {
-        scan: {
-          mentions: [{ entryId: 'D-001', file: 'b.md', line: 9, alias: '网关超时', snippet: '网关超时这事' }],
-        },
-      };
-    },
     async update(id) {
       return { entry: { ...entries[0], rev: 3 }, previousRev: 2, revChanged: true, impact: [] };
     },
     async resolve(items) {
       return { ok: true, results: items.map((item) => ({ ...item, done: true })), failed: [] };
     },
-    async ignore() {},
     async fixPins() {
       return { pinned: [], skipped: [] };
+    },
+    async scan() {
+      return {
+        refs: [{ entryId: 'D-001', file: 'a.md', line: 3 }],
+        mentions: [{ entryId: 'D-001', file: 'b.md', line: 9, alias: '网关超时' }],
+        resurrected: [],
+      };
+    },
+    async rescan() {
+      return {
+        scan: {
+          at: 1,
+          files: 3,
+          scanned: 3,
+          durationMs: 12,
+          truncated: false,
+          refs: [{ entryId: 'D-001', file: 'a.md', line: 3 }],
+          mentions: [{ entryId: 'D-001', file: 'b.md', line: 9, alias: '网关超时' }],
+          resurrected: [],
+        },
+        issues: [],
+        stats: { entries: 2, refs: 1 },
+        counts: { error: 0, warn: 0, info: 0 },
+      };
+    },
+    async stats() {
+      return { entries: 2, refs: 3, coverage: 0.66 };
+    },
+    async list(query) {
+      return { entries: entries.filter((entry) => (query?.kind === undefined || entry.kind === query.kind)), stats: {} };
+    },
+    async add(input) {
+      return {
+        entry: { id: 'T-001', ...input },
+        similar: [],
+        hits: [],
+      };
+    },
+    async archive(id) {
+      return { entry: { ...entries[0], id, supersededBy: 'D-002' }, refs: [] };
+    },
+    async repoint(from, to, options) {
+      return { from, to, apply: options.apply === true, changes: [], markers: 2 };
+    },
+    store: {
+      list: () => entries,
+      async appendAudit() {},
     },
   };
   return ops;
@@ -432,6 +471,161 @@ await test('非回环连接被拒（用 LAN 地址直连验证）', async () => 
     assert.equal(isLoopback({ socket: { remoteAddress: '192.168.0.9' } }), false);
     const { status } = await call(s.origin, `${API}/session`, { headers: { origin: s.origin } });
     assert.equal(status, 200, '回环请求应通过');
+  } finally {
+    await s.close();
+  }
+});
+
+// ---------------------------------------------------------------------------
+// 操作台：新增的读/写操作
+// ---------------------------------------------------------------------------
+
+await test('check 返回指标、计数与有限明细', async () => {
+  const s = await startServer();
+  try {
+    const { status, body } = await call(s.origin, `${API}/check`, { headers: { origin: s.origin } });
+    assert.equal(status, 200);
+    assert.equal(body.ok, true);
+    assert.equal(body.issueTotal, 1);
+    assert.equal(body.issues[0].code, 'STALE');
+    assert.equal(body.stats.coverage, 0.5);
+  } finally {
+    await s.close();
+  }
+});
+
+await test('scan 强制扫描并回传统计', async () => {
+  const s = await startServer();
+  try {
+    const { status, body } = await call(s.origin, `${API}/scan`, { headers: { origin: s.origin } });
+    assert.equal(status, 200);
+    assert.equal(body.files, 3);
+    assert.equal(body.scanned, 3);
+    assert.equal(body.markerTotal, 1);
+    assert.equal(body.mentionTotal, 1);
+  } finally {
+    await s.close();
+  }
+});
+
+await test('stats 返回指标', async () => {
+  const s = await startServer();
+  try {
+    const { status, body } = await call(s.origin, `${API}/stats`, { headers: { origin: s.origin } });
+    assert.equal(status, 200);
+    assert.equal(body.stats.entries, 2);
+    assert.equal(body.stats.coverage, 0.66);
+  } finally {
+    await s.close();
+  }
+});
+
+await test('list 按 kind 过滤', async () => {
+  const s = await startServer();
+  try {
+    const { status, body } = await call(s.origin, `${API}/list?kind=rule`, { headers: { origin: s.origin } });
+    assert.equal(status, 200);
+    assert.equal(body.total, 1);
+    assert.equal(body.entries[0].id, 'R-001');
+  } finally {
+    await s.close();
+  }
+});
+
+await test('add 缺 statement 时 400', async () => {
+  const s = await startServer();
+  try {
+    const { status, body } = await call(s.origin, `${API}/add`, {
+      method: 'POST',
+      headers: { origin: s.origin, 'content-type': 'application/json', [TOKEN_HEADER]: s.token },
+      body: JSON.stringify({ kind: 'fact' }),
+    });
+    assert.equal(status, 400);
+    assert.match(body.error, /statement/u);
+  } finally {
+    await s.close();
+  }
+});
+
+await test('add 登记并返回新条目', async () => {
+  const s = await startServer();
+  try {
+    const { status, body } = await call(s.origin, `${API}/add`, {
+      method: 'POST',
+      headers: { origin: s.origin, 'content-type': 'application/json', [TOKEN_HEADER]: s.token },
+      body: JSON.stringify({ kind: 'fact', statement: '新事实', aliases: ['说法'] }),
+    });
+    assert.equal(status, 200);
+    assert.equal(body.entry.id, 'T-001');
+    assert.deepEqual(body.entry.aliases, ['说法']);
+  } finally {
+    await s.close();
+  }
+});
+
+await test('archive 归档条目', async () => {
+  const s = await startServer();
+  try {
+    const { status, body } = await call(s.origin, `${API}/archive`, {
+      method: 'POST',
+      headers: { origin: s.origin, 'content-type': 'application/json', [TOKEN_HEADER]: s.token },
+      body: JSON.stringify({ id: 'D-001', supersededBy: 'D-002', note: '已取代' }),
+    });
+    assert.equal(status, 200);
+    assert.equal(body.entry.supersededBy, 'D-002');
+  } finally {
+    await s.close();
+  }
+});
+
+await test('repoint 默认只预览，apply 才写', async () => {
+  const s = await startServer();
+  try {
+    const preview = await call(s.origin, `${API}/repoint`, {
+      method: 'POST',
+      headers: { origin: s.origin, 'content-type': 'application/json', [TOKEN_HEADER]: s.token },
+      body: JSON.stringify({ from: 'D-001', to: 'D-002', paths: ['a.md'] }),
+    });
+    assert.equal(preview.status, 200);
+    assert.equal(preview.body.apply, false);
+    assert.equal(preview.body.markers, 2);
+
+    const applied = await call(s.origin, `${API}/repoint`, {
+      method: 'POST',
+      headers: { origin: s.origin, 'content-type': 'application/json', [TOKEN_HEADER]: s.token },
+      body: JSON.stringify({ from: 'D-001', to: 'D-002', paths: ['a.md'], apply: true }),
+    });
+    assert.equal(applied.body.apply, true);
+  } finally {
+    await s.close();
+  }
+});
+
+await test('repoint 缺 paths 时 400', async () => {
+  const s = await startServer();
+  try {
+    const { status, body } = await call(s.origin, `${API}/repoint`, {
+      method: 'POST',
+      headers: { origin: s.origin, 'content-type': 'application/json', [TOKEN_HEADER]: s.token },
+      body: JSON.stringify({ from: 'D-001', to: 'D-002' }),
+    });
+    assert.equal(status, 400);
+    assert.match(body.error, /paths/u);
+  } finally {
+    await s.close();
+  }
+});
+
+await test('ignore 写审计并返回忽略项', async () => {
+  const s = await startServer();
+  try {
+    const { status, body } = await call(s.origin, `${API}/ignore`, {
+      method: 'POST',
+      headers: { origin: s.origin, 'content-type': 'application/json', [TOKEN_HEADER]: s.token },
+      body: JSON.stringify({ id: 'D-001', file: 'b.md', alias: '网关超时' }),
+    });
+    assert.equal(status, 200);
+    assert.equal(body.ignored.alias, '网关超时');
   } finally {
     await s.close();
   }

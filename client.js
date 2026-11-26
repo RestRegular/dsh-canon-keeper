@@ -112,6 +112,50 @@
           'panel.dangling': '悬空引用',
           'panel.truncated': '文件过多，扫描已截断，结果不完整。',
           'panel.readOnly': '只读模式：没拿到写 token，无法盖章。',
+          'console.title': '操作台',
+          'console.hint': '这里能跑检查、扫描和其余全部口径操作；会写盘的都需填写备注。',
+          'console.run': '执行',
+          'console.running': '执行中…',
+          'console.result': '结果',
+          'console.clear': '清空',
+          'console.kind': '类型',
+          'console.id': '口径 id',
+          'console.titleField': '标题（可留空）',
+          'console.statement': '正文',
+          'console.aliases': '定位词（逗号分隔）',
+          'console.tags': '标签（逗号分隔）',
+          'console.note': '备注',
+          'console.status': '状态过滤',
+          'console.query': '关键词',
+          'console.includeArchived': '含已归档',
+          'console.supersededBy': '被谁取代（可留空）',
+          'console.from': '旧 id',
+          'console.to': '新 id',
+          'console.paths': '文件（每行一个）',
+          'console.apply': '实际写入（默认只预览）',
+          'console.file': '文件',
+          'console.alias': '说法',
+          'console.force': '强制重扫（忽略缓存）',
+          'console.stat.entries': '口径 {v}',
+          'console.stat.refs': '引用 {v}',
+          'console.stat.aligned': '已对齐 {v}',
+          'console.stat.stale': '过期 {v}',
+          'console.stat.unpinned': '未验证 {v}',
+          'console.stat.dangling': '悬空 {v}',
+          'console.stat.coverage': '覆盖率 {v}%',
+          'console.stat.files': '文件 {v}',
+          'console.stat.scanned': '实扫 {v}',
+          'console.stat.duration': '耗时 {v}ms',
+          'console.stat.mentions': '未标记命中 {v}',
+          'console.stat.resurrected': '废弃复活 {v}',
+          'console.noRows': '（无）',
+          'console.addDone': '已登记 {id}（标记：{marker}）',
+          'console.archiveDone': '已归档 {id}',
+          'console.repointPreview': '预览：命中 {v} 处，未写入',
+          'console.repointApplied': '已改写 {v} 处标记',
+          'console.ignoreDone': '已忽略 {file} 的「{alias}」',
+          'console.checkDone': '体检完成：错误 {e} / 警告 {w} / 提示 {i}',
+          'console.scanDone': '扫描完成：标记 {m} 处 / 未标记命中 {u} 处',
         },
         en: {
           'tab.title': 'Canon',
@@ -171,6 +215,50 @@
           'panel.dangling': 'dangling',
           'panel.truncated': 'Too many files; the scan was truncated and results are incomplete.',
           'panel.readOnly': 'Read-only: no write token, cannot stamp.',
+          'console.title': 'Operations',
+          'console.hint': 'Run checks, scans and every other canon operation here; write actions require a note.',
+          'console.run': 'Run',
+          'console.running': 'Running…',
+          'console.result': 'Result',
+          'console.clear': 'Clear',
+          'console.kind': 'Kind',
+          'console.id': 'Entry id',
+          'console.titleField': 'Title (optional)',
+          'console.statement': 'Statement',
+          'console.aliases': 'Aliases (comma separated)',
+          'console.tags': 'Tags (comma separated)',
+          'console.note': 'Note',
+          'console.status': 'Status filter',
+          'console.query': 'Query',
+          'console.includeArchived': 'Include archived',
+          'console.supersededBy': 'Superseded by (optional)',
+          'console.from': 'Old id',
+          'console.to': 'New id',
+          'console.paths': 'Files (one per line)',
+          'console.apply': 'Write changes (preview by default)',
+          'console.file': 'File',
+          'console.alias': 'Phrase',
+          'console.force': 'Force rescan (ignore cache)',
+          'console.stat.entries': 'Entries {v}',
+          'console.stat.refs': 'Refs {v}',
+          'console.stat.aligned': 'Aligned {v}',
+          'console.stat.stale': 'Stale {v}',
+          'console.stat.unpinned': 'Unverified {v}',
+          'console.stat.dangling': 'Dangling {v}',
+          'console.stat.coverage': 'Coverage {v}%',
+          'console.stat.files': 'Files {v}',
+          'console.stat.scanned': 'Scanned {v}',
+          'console.stat.duration': 'Duration {v}ms',
+          'console.stat.mentions': 'Unmarked mentions {v}',
+          'console.stat.resurrected': 'Resurrected phrases {v}',
+          'console.noRows': '(none)',
+          'console.addDone': 'Registered {id} (marker: {marker})',
+          'console.archiveDone': 'Archived {id}',
+          'console.repointPreview': 'Preview: {v} hit(s), nothing written',
+          'console.repointApplied': 'Repointed {v} marker(s)',
+          'console.ignoreDone': 'Ignored 「{alias}」 in {file}',
+          'console.checkDone': 'Check done: {e} errors / {w} warnings / {i} info',
+          'console.scanDone': 'Scan done: {m} markers / {u} unmarked mentions',
         },
       };
 
@@ -435,6 +523,30 @@
 .ck-toast-err { border-color:var(--dsw-alias-state-error-primary); color:var(--dsw-alias-state-error-primary); }
 .ck-toast-icon { flex:none; display:inline-flex; }
 .ck-toast-text { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+/* ---------- 操作台 ---------- */
+.ck-console { flex:1; min-height:0; overflow-y:auto; padding:0 14px 48px; }
+.ck-console::-webkit-scrollbar { width:8px; }
+.ck-console::-webkit-scrollbar-thumb { background:var(--dsw-alias-border-l1); border-radius:4px; }
+.ck-console-hint { margin:0 0 10px; font-size:11px; line-height:1.6; color:var(--dsw-alias-label-secondary); }
+.ck-ops { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:6px; margin-bottom:14px; }
+.ck-op { text-align:left; }
+.ck-op-active { border-color:var(--dsw-alias-brand-primary); color:var(--dsw-alias-brand-primary); }
+.ck-form { box-shadow:0 1px 2px rgb(15 23 42/.06); border:1px solid var(--dsw-alias-border-l2); border-radius:9px; padding:12px; background:var(--dsw-alias-bg-layer-1); margin-bottom:12px; }
+.ck-form-row { display:flex; flex-direction:column; gap:4px; margin-bottom:9px; }
+.ck-form-row:last-child { margin-bottom:0; }
+.ck-field-label { font-size:10.5px; font-weight:600; letter-spacing:.03em; color:var(--dsw-alias-label-secondary); }
+.ck-form-actions { display:flex; align-items:center; gap:6px; margin-top:4px; }
+.ck-check { display:inline-flex; align-items:center; gap:6px; font-size:11.5px; color:var(--dsw-alias-label-secondary); cursor:pointer; }
+.ck-check input { accent-color:var(--dsw-alias-brand-primary); }
+.ck-result { box-shadow:0 1px 2px rgb(15 23 42/.06); border:1px solid var(--dsw-alias-border-l2); border-radius:9px; padding:11px 12px; background:var(--dsw-alias-bg-layer-1); }
+.ck-result-head { display:flex; align-items:center; gap:6px; margin-bottom:8px; }
+.ck-result-title { flex:1; min-width:0; font-size:12px; font-weight:600; }
+.ck-stats-grid { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:9px; }
+.ck-rows { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:10.5px; line-height:1.7; color:var(--dsw-alias-label-secondary); word-break:break-all; max-height:220px; overflow-y:auto; }
+.ck-row-line { padding:2px 0; border-bottom:1px solid var(--dsw-alias-border-l1); }
+.ck-row-line:last-child { border-bottom:0; }
+.ck-pre { white-space:pre-wrap; word-break:break-word; font-size:10.5px; line-height:1.6; margin:0; max-height:260px; overflow:auto; }
 
 /* ---------- 骨架屏 ---------- */
 .ck-skel { border-radius:8px; background:var(--dsw-alias-bg-layer-1); animation:ck-pulse 1.3s ease-in-out infinite; }
@@ -1061,7 +1173,7 @@
       // 列表
       // ------------------------------------------------------------------
 
-      function ListView({ sessionId, onOpen }) {
+      function ListView({ sessionId, onOpen, onConsole }) {
         const [data, setData] = useState(undefined);
         const [error, setError] = useState('');
         const [busy, setBusy] = useState(false);
@@ -1198,6 +1310,12 @@
                 onClick: () => void fixPins(),
                 title: t('panel.fixPinsHint'),
               }, t('panel.fixPins')),
+              h('button', {
+                className: 'ck-btn ck-btn-ghost',
+                type: 'button',
+                onClick: () => onConsole?.(),
+                title: t('console.title'),
+              }, t('console.title')),
             ),
           ),
           h('div', { className: 'ck-stats' },
@@ -1261,17 +1379,260 @@
       }
 
       // ------------------------------------------------------------------
+      // 操作台：把后端每个操作都做成可执行的表单
+      // ------------------------------------------------------------------
+
+      const OPS = ['check', 'scan', 'stats', 'list', 'add', 'archive', 'repoint', 'ignore'];
+
+      /** 把单行输入拆成数组（逗号 / 换行都认）。 */
+      function splitList(value) {
+        return String(value ?? '')
+          .split(/[\n,，]/u)
+          .map((item) => item.trim())
+          .filter((item) => item !== '');
+      }
+
+      /** 把操作结果渲染成可读节点。 */
+      function ResultView({ op, result }) {
+        if (result === undefined || result === null) return null;
+        const stats = result.stats ?? {};
+        const chips = [];
+        const add = (key, value) => {
+          if (value === undefined || value === null) return;
+          chips.push(h(Chip, { key, text: t(key, { v: value }) }));
+        };
+        if (op === 'check' || op === 'scan' || op === 'stats' || op === 'list') {
+          add('console.stat.entries', stats.entries);
+          add('console.stat.refs', stats.refs);
+          add('console.stat.aligned', stats.aligned);
+          add('console.stat.stale', stats.stale);
+          add('console.stat.unpinned', stats.unpinned);
+          add('console.stat.dangling', stats.dangling);
+          if (typeof stats.coverage === 'number') add('console.stat.coverage', Math.round(stats.coverage * 100));
+          add('console.stat.files', result.files);
+          add('console.stat.scanned', result.scanned);
+          add('console.stat.duration', result.durationMs);
+          add('console.stat.mentions', result.mentionTotal ?? stats.unmarkedHits);
+          add('console.stat.resurrected', result.resurrectedTotal ?? stats.resurrectedHits);
+        }
+        const rows = result.issues ?? result.entries ?? result.refs ?? result.mentions ?? result.changes ?? [];
+        return h('div', { className: 'ck-result' },
+          h('div', { className: 'ck-result-head' },
+            h('span', { className: 'ck-result-title' }, t('console.result')),
+          ),
+          chips.length > 0 ? h('div', { className: 'ck-stats-grid' }, chips) : null,
+          rows.length > 0
+            ? h('div', { className: 'ck-rows' }, rows.map((row, index) => h('div', {
+              className: 'ck-row-line',
+              key: `r${index}`,
+            }, (row.level ? `[${row.level}] ` : '')
+              + `${row.code ?? row.id ?? ''} `
+              + `${row.file ?? ''}${row.line !== undefined ? `:${row.line}` : ''} `
+              + `${row.message ?? row.title ?? row.snippet ?? row.alias ?? row.after ?? ''}`.trim())))
+            : h('div', { className: 'ck-rowsub' }, t('console.noRows')),
+          result.entry !== undefined
+            ? h('pre', { className: 'ck-pre' }, JSON.stringify(result.entry, null, 2))
+            : null,
+        );
+      }
+
+      function ConsoleView({ sessionId, onBack }) {
+        const [op, setOp] = useState('check');
+        const [form, setForm] = useState({});
+        const [result, setResult] = useState(undefined);
+        const [error, setError] = useState('');
+        const [busy, setBusy] = useState(false);
+        const { toast, show } = useToast();
+
+        const set = (key, value) => setForm((previous) => ({ ...previous, [key]: value }));
+
+        const run = useCallback(async () => {
+          setBusy(true);
+          setError('');
+          setResult(undefined);
+          try {
+            let payload;
+            let method = 'POST';
+            if (op === 'check' || op === 'scan' || op === 'stats' || op === 'list') {
+              method = 'GET';
+              payload = { sessionId };
+              if (op === 'check' && form.force === true) payload.force = 'true';
+              if (op === 'list') {
+                for (const key of ['kind', 'status', 'tag', 'query']) {
+                  if (form[key]) payload[key] = form[key];
+                }
+                if (form.includeArchived === true) payload.includeArchived = 'true';
+              }
+            } else {
+              payload = { sessionId };
+              if (op === 'add') {
+                payload = {
+                  ...payload,
+                  kind: form.kind ?? '',
+                  title: form.title ?? '',
+                  statement: form.statement ?? '',
+                  aliases: splitList(form.aliases),
+                  tags: splitList(form.tags),
+                  note: form.note ?? '',
+                };
+              } else if (op === 'archive') {
+                payload = { ...payload, id: form.id ?? '', supersededBy: form.supersededBy ?? '', note: form.note ?? '' };
+              } else if (op === 'repoint') {
+                payload = { ...payload, from: form.from ?? '', to: form.to ?? '', paths: splitList(form.paths), apply: form.apply === true };
+              } else if (op === 'ignore') {
+                payload = { ...payload, id: form.id ?? '', file: form.file ?? '', alias: form.alias ?? '', note: form.note ?? '' };
+              }
+            }
+            const resultPayload = method === 'GET'
+              ? await apiGet(op, payload, FETCH_TIMEOUT_MS)
+              : await apiPost(op, payload);
+            setResult(resultPayload);
+            if (op === 'add' && resultPayload.entry !== undefined) {
+              show(t('console.addDone', { id: resultPayload.entry.id, marker: resultPayload.entry.marker ?? '' }));
+            } else if (op === 'archive' && resultPayload.entry !== undefined) {
+              show(t('console.archiveDone', { id: resultPayload.entry.id }));
+            } else if (op === 'repoint') {
+              show(t(resultPayload.apply === true ? 'console.repointApplied' : 'console.repointPreview', { v: resultPayload.markers ?? 0 }));
+            } else if (op === 'ignore') {
+              show(t('console.ignoreDone', { file: form.file ?? '', alias: form.alias ?? '' }));
+            } else if (op === 'check') {
+              const counts = resultPayload.counts ?? {};
+              show(t('console.checkDone', { e: counts.error ?? 0, w: counts.warn ?? 0, i: counts.info ?? 0 }));
+            } else if (op === 'scan') {
+              show(t('console.scanDone', { m: resultPayload.markerTotal ?? 0, u: resultPayload.mentionTotal ?? 0 }));
+            }
+          } catch (failure) {
+            const message = String(failure?.message ?? failure);
+            setError(message);
+            show(message, 'err');
+          } finally {
+            setBusy(false);
+          }
+        }, [op, form, sessionId, show]);
+
+        const field = (key, label, options = {}) => h('label', { className: 'ck-form-row', key },
+          h('span', { className: 'ck-field-label' }, label),
+          options.multiline
+            ? h('textarea', {
+              className: 'ck-input',
+              value: form[key] ?? '',
+              rows: options.rows ?? 3,
+              placeholder: options.placeholder ?? '',
+              onChange: (event) => set(key, event.target.value),
+            })
+            : h('input', {
+              className: 'ck-input',
+              type: options.type ?? 'text',
+              value: form[key] ?? '',
+              placeholder: options.placeholder ?? '',
+              onChange: (event) => set(key, options.checkbox ? event.target.checked : event.target.value),
+            }),
+        );
+
+        let formNode = null;
+        if (op === 'check') {
+          formNode = h('div', { className: 'ck-form' },
+            h('label', { className: 'ck-check' },
+              h('input', { type: 'checkbox', checked: form.force === true, onChange: (event) => set('force', event.target.checked) }),
+              t('console.force'),
+            ),
+          );
+        } else if (op === 'list') {
+          formNode = h('div', { className: 'ck-form' },
+            field('status', t('console.status'), { placeholder: 'all / problem / stale / orphan' }),
+            field('kind', t('console.kind'), { placeholder: 'decision / rule / value / term / fact' }),
+            field('tag', t('console.tags')),
+            field('query', t('console.query')),
+            h('label', { className: 'ck-check' },
+              h('input', { type: 'checkbox', checked: form.includeArchived === true, onChange: (event) => set('includeArchived', event.target.checked) }),
+              t('console.includeArchived'),
+            ),
+          );
+        } else if (op === 'add') {
+          formNode = h('div', { className: 'ck-form' },
+            field('kind', t('console.kind'), { placeholder: 'decision / rule / value / term / fact' }),
+            field('title', t('console.titleField')),
+            field('statement', t('console.statement'), { multiline: true, rows: 3 }),
+            field('aliases', t('console.aliases')),
+            field('tags', t('console.tags')),
+            field('note', t('console.note')),
+          );
+        } else if (op === 'archive') {
+          formNode = h('div', { className: 'ck-form' },
+            field('id', t('console.id')),
+            field('supersededBy', t('console.supersededBy')),
+            field('note', t('console.note')),
+          );
+        } else if (op === 'repoint') {
+          formNode = h('div', { className: 'ck-form' },
+            field('from', t('console.from')),
+            field('to', t('console.to')),
+            field('paths', t('console.paths'), { multiline: true, rows: 3 }),
+            h('label', { className: 'ck-check' },
+              h('input', { type: 'checkbox', checked: form.apply === true, onChange: (event) => set('apply', event.target.checked) }),
+              t('console.apply'),
+            ),
+          );
+        } else if (op === 'ignore') {
+          formNode = h('div', { className: 'ck-form' },
+            field('id', t('console.id')),
+            field('file', t('console.file')),
+            field('alias', t('console.alias')),
+            field('note', t('console.note')),
+          );
+        }
+
+        return h('div', { className: 'ck-root' },
+          h('div', { className: 'ck-head' },
+            h('button', { className: 'ck-back', onClick: onBack, type: 'button' }, h(IconBack), t('panel.back')),
+            h('span', { className: 'ck-title' }, t('console.title')),
+          ),
+          h('div', { className: 'ck-console' },
+            h('p', { className: 'ck-console-hint' }, t('console.hint')),
+            h('div', { className: 'ck-ops' }, OPS.map((name) => h('button', {
+              className: `ck-btn ck-op${op === name ? ' ck-op-active' : ''}`,
+              type: 'button',
+              key: name,
+              onClick: () => { setOp(name); setResult(undefined); setError(''); },
+            }, name))),
+            formNode,
+            h('div', { className: 'ck-form-actions' },
+              h('button', {
+                className: 'ck-btn ck-btn-primary',
+                type: 'button',
+                disabled: busy,
+                onClick: () => void run(),
+              }, busy ? t('console.running') : t('console.run')),
+              result !== undefined ? h('button', {
+                className: 'ck-btn ck-btn-ghost',
+                type: 'button',
+                disabled: busy,
+                onClick: () => setResult(undefined),
+              }, t('console.clear')) : null,
+            ),
+            error !== '' ? h('div', { className: 'ck-note' }, error) : null,
+            h(ResultView, { op, result }),
+          ),
+          h(ToastNode, { toast }),
+        );
+      }
+
+      // ------------------------------------------------------------------
       // 标签页入口
       // ------------------------------------------------------------------
 
       function CanonTab(props) {
         const sessionId = props?.sessionId;
         const [openId, setOpenId] = useState(undefined);
+        const [consoleOpen, setConsoleOpen] = useState(false);
 
         if (typeof sessionId !== 'string' || sessionId === '') {
           return h('div', { className: 'ck-root' }, h('div', { className: 'ck-empty' }, t('panel.noSession')));
         }
 
+        if (consoleOpen) {
+          return h(ConsoleView, { sessionId, onBack: () => setConsoleOpen(false) });
+        }
         if (openId !== undefined) {
           return h(DetailView, {
             sessionId,
@@ -1280,7 +1641,11 @@
             onChanged: () => {},
           });
         }
-        return h(ListView, { sessionId, onOpen: (id) => setOpenId(id) });
+        return h(ListView, {
+          sessionId,
+          onOpen: (id) => setOpenId(id),
+          onConsole: () => setConsoleOpen(true),
+        });
       }
 
       /**
@@ -1381,7 +1746,7 @@
         inject: ['slots', 'sidebarRight'],
         apply,
         // 仅供冒烟测试；宿主不会读取。
-        __test: { DICT, CanonTab, CanonTabTitle, CanonIcon, toneOf, statusTextOf, fallbackTranslate },
+        __test: { DICT, CanonTab, CanonTabTitle, CanonIcon, toneOf, statusTextOf, fallbackTranslate, ConsoleView, ResultView, splitList },
       };
     },
   });

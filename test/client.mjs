@@ -412,6 +412,56 @@ await test('点「在右侧栏打开」会真的调到 openResourceIn（真实�
   assert.ok(String(address).startsWith('dsh-resource://file/session/'), `地址格式不对：${address}`);
 });
 
+await test('列表页有「操作台」入口，点开能渲染全部操作按钮', async () => {
+  const { plugin, render } = await loadClient();
+  const { CanonTab } = plugin.__test;
+  globalThis.fetch = async () => {
+    const payload = { ok: true, stats: { entries: 0, refs: 0, coverage: 0 }, entries: [] };
+    return { ok: true, status: 200, headers: { get: () => null }, json: async () => payload, text: async () => JSON.stringify(payload) };
+  };
+
+  const listTree = await render({ __el: true, type: CanonTab, props: { sessionId: 's-1' }, children: [] });
+  const buttons = collect(listTree).filter((node) => typeof node.props?.onClick === 'function' && node.type === 'button');
+  const consoleBtn = buttons.find((node) => node.props?.title === '操作台');
+  assert.ok(consoleBtn !== undefined, '列表页应有「操作台」按钮');
+
+  await consoleBtn.props.onClick();
+  const consoleTree = await render({ __el: true, type: CanonTab, props: { sessionId: 's-1' }, children: [] });
+  const opButtons = collect(consoleTree)
+    .filter((node) => typeof node.props?.className === 'string' && node.props.className.includes('ck-op'))
+    .map((node) => node.children?.[0])
+    .filter((child) => typeof child === 'string');
+  for (const op of ['check', 'scan', 'stats', 'list', 'add', 'archive', 'repoint', 'ignore']) {
+    assert.ok(opButtons.includes(op), `操作台应露出 ${op}`);
+  }
+});
+
+await test('操作台点 check 会真发请求到 /check', async () => {
+  const { plugin, render } = await loadClient();
+  const { CanonTab } = plugin.__test;
+  const urls = [];
+  globalThis.fetch = async (url) => {
+    urls.push(String(url));
+    const payload = {
+      ok: true,
+      stats: { entries: 2, refs: 3, coverage: 0.66 },
+      counts: { error: 0, warn: 1, info: 0 },
+      issues: [],
+    };
+    return { ok: true, status: 200, headers: { get: () => null }, json: async () => payload, text: async () => JSON.stringify(payload) };
+  };
+
+  const listTree = await render({ __el: true, type: CanonTab, props: { sessionId: 's-1' }, children: [] });
+  const consoleBtn = collect(listTree).find((node) => node.type === 'button' && node.props?.title === '操作台');
+  await consoleBtn.props.onClick();
+  const consoleTree = await render({ __el: true, type: CanonTab, props: { sessionId: 's-1' }, children: [] });
+  const runBtn = collect(consoleTree).find((node) => node.type === 'button' && node.children?.[0] === '执行');
+  assert.ok(runBtn !== undefined, '应有「执行」按钮');
+  await runBtn.props.onClick();
+  await render({ __el: true, type: CanonTab, props: { sessionId: 's-1' }, children: [] });
+  assert.ok(urls.some((url) => url.includes('/dsh-canon-keeper/api/check')), `请求应打到 /check，实际：${urls.join(', ')}`);
+});
+
 process.stdout.write('\nsummary\n');
 process.stdout.write(`  ${passed} passed, ${failures.length} failed\n`);
 if (failures.length > 0) {
